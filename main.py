@@ -24,57 +24,7 @@ HEADERS = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
 }
 
-class ProgressLogger:
-    def __init__(self):
-        self.last_percent = 0
-        self.last_speed = 0
-        self.start_time = None
-        import time
-        self.time = time
-    
-    def debug(self, msg):
-        pass
-    
-    def warning(self, msg):
-        pass
-    
-    def error(self, msg):
-        print(f"❌ Erro: {msg}")
-    
-    def progress_hook(self, d):
-        if d['status'] == 'downloading':
-            total = d.get('total_bytes') or d.get('total_bytes_estimate') or 0
-            downloaded = d.get('downloaded_bytes', 0)
-            speed = d.get('speed', 0)
-            
-            if total > 0:
-                percent = (downloaded / total * 100)
-                
-                if percent - self.last_percent >= 2 or speed != self.last_speed:
-                    speed_str = f"{speed/1024/1024:.1f} MB/s" if speed else "calculando..."
-                    eta = d.get('eta', 0)
-                    if eta and eta > 0:
-                        eta_minutes = int(eta // 60)
-                        eta_seconds = int(eta % 60)
-                        eta_str = f"{eta_minutes:02d}:{eta_seconds:02d}"
-                    else:
-                        eta_str = "calculando..."
-                    
-                    bar_length = 30
-                    filled_length = int(bar_length * percent / 100)
-                    bar = '█' * filled_length + '░' * (bar_length - filled_length)
-                    
-                    print(f"\r📥 {bar} {percent:.1f}% | {speed_str} | ETA: {eta_str}", end='', flush=True)
-                    
-                    self.last_percent = percent
-                    self.last_speed = speed
-                    
-        elif d['status'] == 'finished':
-            print(f"\n✅ Download finalizado!")
-            self.last_percent = 0
-            self.last_speed = 0
-        elif d['status'] == 'error':
-            print(f"\n❌ Falha durante o download.")
+
 
 def get_concurrent_fragments():
     """Get the number of concurrent fragments from user input."""
@@ -154,18 +104,14 @@ def download_video(url, save_path, video_name, concurrent_fragments):
     
     outtmpl = str(save_path / f"{video_name}.%(ext)s")
     
-    logger = ProgressLogger()
-    
     ydl_opts = {
         'outtmpl': outtmpl,
         'http_headers': HEADERS,
         'allow_unplayable_formats': True,
         'nocheckcertificate': True,
-        'progress_hooks': [logger.progress_hook],
-        'logger': logger,
         'concurrent_fragment_downloads': concurrent_fragments,
-        'quiet': True,
         'no_warnings': True,
+        'hls_prefer_native': True,
     }
     
     try:
@@ -179,7 +125,6 @@ def download_video(url, save_path, video_name, concurrent_fragments):
         with YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
         
-        print("✅ Download concluído com sucesso!")
         return True
         
     except Exception as e:
