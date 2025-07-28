@@ -133,7 +133,8 @@ def download_video(url, save_path, video_name, concurrent_fragments):
 
 def main():
     print("🚀 === Hotmart Cloudfront embed Downloader ===")
-    print("💡 Pressione ctrl+c a qualquer momento para sair")
+    print("\tVisite https://katomart.com para mais informações")
+    print("💡 Pressione ctrl+c a qualquer momento para sair\n")
     
     try:
         concurrent_fragments = get_concurrent_fragments()
